@@ -546,3 +546,8 @@ func key(i int) string {
 func value() []byte {
 	return make([]byte, 100)
 }
+
+
+func parallelKey(threadID int, counter int) string {
+	return fmt.Sprintf("key-%04d-%06d", threadID, counter)
+}
