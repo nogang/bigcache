@@ -6,14 +6,10 @@ import (
 	"time"
 
 	"github.com/allegro/bigcache"
-	//"sync"
-	//"github.com/coocood/freecache"
+
+
+		"math/rand"
 	"github.com/hashicorp/golang-lru"
-	"math/rand"
-	"github.com/coocood/freecache"
-	"runtime"
-	"github.com/patrickmn/go-cache"
-	"sync"
 )
 
 const maxEntrySize = 256
@@ -28,8 +24,44 @@ const multiCache = 2
 ////////////////cache size별 read time////////////
 
 
+func BenchmarkCacheTest(b *testing.B){
+	benchmarks := [] struct{
+		name		string
+		initSize 	int
+	}{
+		{"lru",100},
+		{"lru",1000000},
+	}
 
+	var cache *lru.Cache
+	for _, bm := range benchmarks {
+		switch bm.name {
+		case "lru":
+			cache, _= lru.New(bm.initSize)
+			for i := 0; i < bm.initSize; i++ {
+				cache.Add(key(i), value())
+			}
+		}
+		testName := fmt.Sprintf("%s:%d",bm.name, bm.initSize)
+		b.Run(testName, func(b *testing.B) {
+			for i:= 0 ; i < b.N ; i++{
+				cache.Get(key(i%bm.initSize))
+			}
 
+		})
+
+	}
+
+}
+
+func benchmarkGet(b *testing.B, initCacheSize int, dataSize int){
+	cache, _ := lru.New(initCacheSize )
+	for i := 0; i < b.N; i++ {
+		cache.Add(key(i), value())
+	}
+}
+
+/*
 func BenchmarkPeekTest(b *testing.B){
 	cache, _ := lru.New(b.N * multiCache)
 	for i := 0; i < b.N; i++ {
@@ -221,17 +253,21 @@ func BenchmarkFreeCacheGetParallel(b *testing.B) {
 		}
 	})
 }
-/*
-func BenchmarkBigCacheGetShard64Test(b *testing.B) {
-	benchmarkBigCacheGetShard(b,64)
-}
 */
+/*
 func BenchmarkBigCacheSetParallel1024(b *testing.B) {
 	benchmarkBigCacheSetParallel(b, 1024)
 }
 func BenchmarkBigCacheGetParallel1024Test(b *testing.B) {
 	benchmarkBigCacheGetShard(b,1024)
 }
+*/
+/*
+func BenchmarkBigCacheGetShard64Test(b *testing.B) {
+	benchmarkBigCacheGetShard(b,64)
+}
+*/
+
 /*
 func BenchmarkBigCacheGetShard2048Test(b *testing.B) {
 	benchmarkBigCacheGetShard(b,2048)
