@@ -18,8 +18,52 @@ import (
 
 const maxEntrySize = 256
 const mapSize = 100
-const maxGoroutine = 10
+const maxGoroutine = 5
 const multiCache = 2
+
+
+
+////////////////cache size별 get time////////////
+
+////////////////cache size별 read time////////////
+
+
+
+
+func BenchmarkPeekTest(b *testing.B){
+	cache, _ := lru.New(b.N * multiCache)
+	for i := 0; i < b.N; i++ {
+		cache.Add(key(i), value())
+	}
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.SetParallelism(maxGoroutine)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		counter := 0
+		for pb.Next() {
+			cache.Peek(key(counter))
+			counter = counter + 1
+		}
+	})
+}
+
+func BenchmarkLRUCacheGetParallel2(b *testing.B) {
+	cache, _ := lru.New(b.N * multiCache)
+	for i := 0; i < b.N; i++ {
+		cache.Add(key(i), value())
+	}
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.SetParallelism(maxGoroutine)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		counter := 0
+		for pb.Next() {
+			cache.Get(key(counter))
+			counter = counter + 1
+		}
+	})
+}
+
 
 
 func BenchmarkSyncMapSet(b *testing.B){
