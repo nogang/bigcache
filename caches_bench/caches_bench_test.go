@@ -9,7 +9,9 @@ import (
 
 
 			"github.com/hashicorp/golang-lru"
-			)
+	"runtime"
+	"math/rand"
+)
 
 const maxEntrySize = 256
 const mapSize = 100
@@ -73,11 +75,19 @@ type BM struct{
 
 type TestFunc func(b *testing.B, cache Cache, bm BM)
 
-func BenchmarkCacheGetTest(b *testing.B){
+func BenchmarkCacheSingleGetTest(b *testing.B){
 	benchCacheTest(b, singleGetTestFunc)
 }
-func BenchmarkCacheAddTest(b *testing.B){
+func BenchmarkCacheSingleAddTest(b *testing.B){
 	benchCacheTest(b, singleAddTestFunc)
+}
+
+func BenchmarkCacheParellalGetTest(b *testing.B){
+	benchCacheTest(b, parallelGetTestFunc)
+}
+
+func BenchmarkCacheParellalAddTest(b *testing.B){
+	benchCacheTest(b, parallelAddTestFunc)
 }
 
 func benchCacheTest(b *testing.B, tf TestFunc){
@@ -85,7 +95,8 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 	cacheName := []string{"lru", "bigCache"}
 
 	for i := 0 ; i < len(cacheName) ; i++ {
-		for cacheSize := 1000 ; cacheSize <= 100000000 ; cacheSize *= 10 {
+		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
+		//for cacheSize := 1000 ; cacheSize <= 1000 ; cacheSize *= 10 {
 			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
 			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
 			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
@@ -123,21 +134,47 @@ var singleGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 	})
 }
 
+var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
+	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d,goRoutine:%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.SetParallelism(maxGoroutine)
+	b.ResetTimer()
+	b.Run(testName, func(b *testing.B){
+		b.RunParallel(func(pb *testing.PB) {
+			id := rand.Intn(maxGoroutine * 1000)
+			counter := 0
+			for pb.Next() {
+				cache.Add(parallelKey(id, counter), value())
+				counter++
+			}
+		})
+	})
+}
+
+var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
+	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d,goRoutine:%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.SetParallelism(maxGoroutine)
+	b.ResetTimer()
+	b.Run(testName, func(b *testing.B) {
+		b.RunParallel(func(pb *testing.PB) {
+			counter := 0
+			for pb.Next() {
+				cache.Get(key(counter % bm.inDataSize))
+				counter++
+			}
+		})
+	})
+}
+
 func newCache(cacheName string, size int ) (Cache, error){
 	switch cacheName {
-		case "lru":
+	case "lru":
 		return lru.New(size)
 	case "bigCache" :
 		return initBigCache(size, 1024), nil
 	}
 	return nil, nil
-}
-
-func benchmarkGet(b *testing.B, initCacheSize int, dataSize int){
-	cache, _ := lru.New(initCacheSize )
-	for i := 0; i < b.N; i++ {
-		cache.Add(key(i), value())
-	}
 }
 
 /////랜덤 테스트 구현/////
