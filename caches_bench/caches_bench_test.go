@@ -11,6 +11,7 @@ import (
 			"github.com/hashicorp/golang-lru"
 	"runtime"
 	"math/rand"
+	"github.com/coocood/freecache"
 )
 
 const maxEntrySize = 256
@@ -19,13 +20,17 @@ const maxGoroutine = 5
 const multiCache = 2
 
 
+const LRU = "LRU"
+const BigCache = "BigCache"
+const FreeCache = "FreeCache"
+const GoCache = "GoCache"
 
 ////////////////cache size별 get time////////////
 
 ////////////////cache size별 read time////////////
 
 type Cache interface{
-	Add(key, value interface{}) (evicted bool)
+	Add(key, value interface{}) (ok bool)
 	Get(key interface{}) (value interface{}, ok bool)
 }
 
@@ -33,8 +38,9 @@ type lruCache struct {
 	lru *lru.Cache
 }
 
-func (cache *lruCache) Add(key, value interface{}) (evicted bool) {
-	return cache.lru.Add(key, value)
+func (cache *lruCache) Add(key, value interface{}) (ok bool) {
+	cache.lru.Add(key, value)
+	return true
 }
 
 func (cache *lruCache) Get(key interface{}) (value interface{}, ok bool) {
@@ -45,14 +51,13 @@ type bigCache struct {
 	big *bigcache.BigCache
 }
 
-func (cache *bigCache) Add(key, value interface{}) (evicted bool) {
+func (cache *bigCache) Add(key, value interface{}) (ok bool) {
 	k, kok := key.(string)
 	v, vok := value.([]byte)
-	if kok && vok {
+	if ok = kok && vok ; ok {
 		cache.big.Set(k, v)
 	}
-
-	return false
+	return
 }
 
 func (cache *bigCache) Get(key interface{}) (value interface{}, ok bool) {
@@ -60,7 +65,29 @@ func (cache *bigCache) Get(key interface{}) (value interface{}, ok bool) {
 	if ok {
 		ret, error := cache.big.Get(k)
 		return ret, error == nil
+	}
+	return nil, false
+}
 
+type freeCache struct{
+	free *freecache.Cache
+}
+
+func (cache *freeCache)Add(key, value interface{}) (ok bool) {
+	k, kok := key.([]byte)
+	v, vok := value.([]byte)
+
+	if ok = kok && vok ; ok {
+		cache.free.Set(k, v,0)
+	}
+	return
+}
+
+func (cache *freeCache) Get(key interface{}) (value interface{}, ok bool) {
+	k, ok := key.([]byte)
+	if ok {
+		ret, error := cache.free.Get(k)
+		return ret, error == nil
 	}
 	return nil, false
 }
@@ -92,7 +119,7 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
-	cacheName := []string{"lru", "bigCache"}
+	cacheName := []string{LRU, BigCache, FreeCache}
 
 	for i := 0 ; i < len(cacheName) ; i++ {
 		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
@@ -169,13 +196,44 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 
 func newCache(cacheName string, size int ) (Cache, error){
 	switch cacheName {
-	case "lru":
+	case LRU:
 		return lru.New(size)
-	case "bigCache" :
+	case BigCache:
 		return initBigCache(size, 1024), nil
+	case FreeCache:
+		return initFreeCache(size), nil
+
 	}
 	return nil, nil
 }
+
+func initBigCache(entriesInWindow int, shards int) *bigCache {
+	cache, _ := bigcache.NewBigCache(bigcache.Config{
+		Shards:             shards,
+		LifeWindow:         10 * time.Minute,
+		MaxEntriesInWindow: entriesInWindow,
+		MaxEntrySize:       maxEntrySize,
+		Verbose:            false,
+	})
+
+	return &bigCache{cache}
+}
+
+func initFreeCache(size int) *freeCache{
+	return &freeCache{free:freecache.NewCache(size * maxEntrySize)}
+}
+
+func key(i int) string {
+	return fmt.Sprintf("key-%010d", i)
+}
+func value() []byte {
+	return make([]byte, 100)
+}
+
+func parallelKey(threadID int, counter int) string {
+	return fmt.Sprintf("key-%04d-%06d", threadID, counter)
+}
+
 
 /////랜덤 테스트 구현/////
 /*
@@ -469,18 +527,6 @@ func BenchmarkBigCacheSetParallel2048(b *testing.B) {
 }
 
 */
-func initBigCache(entriesInWindow int, shards int) *bigCache {
-	cache, _ := bigcache.NewBigCache(bigcache.Config{
-		Shards:             shards,
-		LifeWindow:         10 * time.Minute,
-		MaxEntriesInWindow: entriesInWindow,
-		MaxEntrySize:       maxEntrySize,
-		Verbose:            false,
-	})
-
-	return &bigCache{cache}
-}
-
 
 /*
 
@@ -788,14 +834,3 @@ func BenchmarkConcurrentMapGetParallel(b *testing.B) {
 }
 
 */
-func key(i int) string {
-	return fmt.Sprintf("key-%010d", i)
-}
-func value() []byte {
-	return make([]byte, 100)
-}
-
-
-func parallelKey(threadID int, counter int) string {
-	return fmt.Sprintf("key-%04d-%06d", threadID, counter)
-}
