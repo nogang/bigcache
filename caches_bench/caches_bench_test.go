@@ -74,20 +74,24 @@ type freeCache struct{
 }
 
 func (cache *freeCache)Add(key, value interface{}) (ok bool) {
-	k, kok := key.([]byte)
+	k, kok := key.(string)
 	v, vok := value.([]byte)
 
 	if ok = kok && vok ; ok {
-		cache.free.Set(k, v,0)
+		cache.free.Set([]byte(k), v,0)
+	} else {
+		fmt.Println("freeCacheAddFail")
 	}
 	return
 }
 
 func (cache *freeCache) Get(key interface{}) (value interface{}, ok bool) {
-	k, ok := key.([]byte)
+	k, ok := key.(string)
 	if ok {
-		ret, error := cache.free.Get(k)
+		ret, error := cache.free.Get([]byte(k))
 		return ret, error == nil
+	} else {
+		fmt.Println("freeCacheGetFail")
 	}
 	return nil, false
 }
