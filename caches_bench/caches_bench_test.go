@@ -8,9 +8,8 @@ import (
 	"github.com/allegro/bigcache"
 
 
-		"math/rand"
-	"github.com/hashicorp/golang-lru"
-)
+			"github.com/hashicorp/golang-lru"
+			)
 
 const maxEntrySize = 256
 const mapSize = 100
@@ -23,35 +22,130 @@ const multiCache = 2
 
 ////////////////cache size별 read time////////////
 
+type Cache interface{
+	Add(key, value interface{}) (evicted bool)
+	Get(key interface{}) (value interface{}, ok bool)
+}
 
-func BenchmarkCacheTest(b *testing.B){
+type lruCache struct {
+	lru *lru.Cache
+}
+
+func (cache *lruCache) Add(key, value interface{}) (evicted bool) {
+	return cache.lru.Add(key, value)
+}
+
+func (cache *lruCache) Get(key interface{}) (value interface{}, ok bool) {
+	return cache.lru.Get(key)
+}
+
+type bigCache struct {
+	big *bigcache.BigCache
+}
+
+func (cache *bigCache) Add(key, value interface{}) (evicted bool) {
+	k, kok := key.(string)
+	v, vok := value.([]byte)
+	if kok && vok {
+		cache.big.Set(k, v)
+	}
+
+	return false
+}
+
+func (cache *bigCache) Get(key interface{}) (value interface{}, ok bool) {
+	k, ok := key.(string)
+	if ok {
+		ret, error := cache.big.Get(k)
+		return ret, error == nil
+
+	}
+	return nil, false
+}
+func BenchmarkCacheGetTest(b *testing.B){
 	benchmarks := [] struct{
 		name		string
 		initSize 	int
 	}{
 		{"lru",100},
+		{"bigCache",100},
 		{"lru",1000000},
+		{"bigCache",1000000},
+		{"lru",10000000},
+		{"bigCache",10000000},
 	}
 
-	var cache *lru.Cache
+	var cache Cache
 	for _, bm := range benchmarks {
-		switch bm.name {
-		case "lru":
-			cache, _= lru.New(bm.initSize)
-			for i := 0; i < bm.initSize; i++ {
-				cache.Add(key(i), value())
-			}
+		cache, _ = newCache(bm.name, bm.initSize)
+
+		for i := 0; i < bm.initSize; i++ {
+			cache.Add(key(i), value())
 		}
+
 		testName := fmt.Sprintf("%s:%d",bm.name, bm.initSize)
 		b.Run(testName, func(b *testing.B) {
 			for i:= 0 ; i < b.N ; i++{
 				cache.Get(key(i%bm.initSize))
 			}
-
 		})
+	}
+}
 
+func BenchmarkCacheAddTest(b *testing.B){
+	benchmarks := [] struct{
+		name		string
+		cacheSize	int
+		inDataSize 	int
+	}{
+		{"lru",100,100},
+		{"lru",1000,100},
+		{"lru",10000,100},
+		{"lru",100000,100},
+		{"lru",1000000,100},
+		{"lru",10000000,100},
+		{"lru",100000000,100},
+		{"lru",1000000000,100},
+		{"bigCache",100,100},
+		{"bigCache",1000,100},
+		{"bigCache",10000,100},
+		{"bigCache",100000,100},
+		{"bigCache",1000000,100},
+		{"bigCache",10000000,100},
+		{"bigCache",100000000,100},
+		{"bigCache",1000000000,100},
 	}
 
+	var cache Cache
+	for _, bm := range benchmarks {
+		cache, _ = newCache(bm.name, bm.cacheSize)
+
+		for i := 0; i < bm.inDataSize; i++ {
+			cache.Add(key(i), value())
+		}
+
+		testName := fmt.Sprintf("%s,cacheSize:%d,inData:%d",bm.name, bm.cacheSize, bm.inDataSize)
+		b.Run(testName, func(b *testing.B) {
+			for i:= 0 ; i < b.N ; i++{
+				cache.Add(key(i+bm.inDataSize), value())
+			}
+		})
+	}
+}
+
+
+
+
+
+
+func newCache(cacheName string, size int ) (Cache, error){
+	switch cacheName {
+		case "lru":
+		return lru.New(size)
+	case "bigCache" :
+		return initBigCache(size, 1024), nil
+	}
+	return nil, nil
 }
 
 func benchmarkGet(b *testing.B, initCacheSize int, dataSize int){
@@ -61,6 +155,24 @@ func benchmarkGet(b *testing.B, initCacheSize int, dataSize int){
 	}
 }
 
+/*
+func BenchmarkGoCacheSetParallel(b *testing.B) {
+	c := cache.New(5*time.Minute, 10*time.Minute)
+
+	rand.Seed(time.Now().Unix())
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.SetParallelism(maxGoroutine)
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		id := rand.Intn(maxGoroutine * 1000)
+		counter := 0
+		for pb.Next() {
+			c.Set(parallelKey(id, counter), value(),cache.DefaultExpiration)
+			counter = counter + 1
+		}
+	})
+}
+*/
 /*
 func BenchmarkPeekTest(b *testing.B){
 	cache, _ := lru.New(b.N * multiCache)
@@ -273,6 +385,8 @@ func BenchmarkBigCacheGetShard2048Test(b *testing.B) {
 	benchmarkBigCacheGetShard(b,2048)
 }
 */
+
+/*
 func benchmarkBigCacheSetParallel(b *testing.B, shard int) {
 	cache := initBigCache(b.N * multiCache, shard)
 	rand.Seed(time.Now().Unix())
@@ -287,7 +401,7 @@ func benchmarkBigCacheSetParallel(b *testing.B, shard int) {
 		}
 	})
 }
-
+*/
 /*
 func BenchmarkBigCacheSetParallel64(b *testing.B) {
 	benchmarkBigCacheSetParallel(b, 64)
@@ -301,16 +415,16 @@ func BenchmarkBigCacheSetParallel2048(b *testing.B) {
 }
 
 */
-func initBigCache(entriesInWindow int, shards int) *bigcache.BigCache {
+func initBigCache(entriesInWindow int, shards int) *bigCache {
 	cache, _ := bigcache.NewBigCache(bigcache.Config{
 		Shards:             shards,
 		LifeWindow:         10 * time.Minute,
 		MaxEntriesInWindow: entriesInWindow,
 		MaxEntrySize:       maxEntrySize,
-		Verbose:            true,
+		Verbose:            false,
 	})
 
-	return cache
+	return &bigCache{cache}
 }
 
 
