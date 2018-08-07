@@ -62,58 +62,34 @@ func (cache *bigCache) Get(key interface{}) (value interface{}, ok bool) {
 	}
 	return nil, false
 }
-func BenchmarkCacheGetTest(b *testing.B){
-	benchmarks := [] struct{
-		name		string
-		initSize 	int
-	}{
-		{"lru",100},
-		{"bigCache",100},
-		{"lru",1000000},
-		{"bigCache",1000000},
-		{"lru",10000000},
-		{"bigCache",10000000},
-	}
 
-	var cache Cache
-	for _, bm := range benchmarks {
-		cache, _ = newCache(bm.name, bm.initSize)
-
-		for i := 0; i < bm.initSize; i++ {
-			cache.Add(key(i), value())
-		}
-
-		testName := fmt.Sprintf("%s:%d",bm.name, bm.initSize)
-		b.Run(testName, func(b *testing.B) {
-			for i:= 0 ; i < b.N ; i++{
-				cache.Get(key(i%bm.initSize))
-			}
-		})
-	}
+type BM struct{
+	name		string
+	cacheSize	int
+	inDataSize 	int
 }
 
+
+
+type TestFunc func(b *testing.B, cache Cache, bm BM)
+
+func BenchmarkCacheGetTest(b *testing.B){
+	benchCacheTest(b, singleGetTestFunc)
+}
 func BenchmarkCacheAddTest(b *testing.B){
-	benchmarks := [] struct{
-		name		string
-		cacheSize	int
-		inDataSize 	int
-	}{
-		{"lru",100,100},
-		{"lru",1000,100},
-		{"lru",10000,100},
-		{"lru",100000,100},
-		{"lru",1000000,100},
-		{"lru",10000000,100},
-		{"lru",100000000,100},
-		{"lru",1000000000,100},
-		{"bigCache",100,100},
-		{"bigCache",1000,100},
-		{"bigCache",10000,100},
-		{"bigCache",100000,100},
-		{"bigCache",1000000,100},
-		{"bigCache",10000000,100},
-		{"bigCache",100000000,100},
-		{"bigCache",1000000000,100},
+	benchCacheTest(b, singleAddTestFunc)
+}
+
+func benchCacheTest(b *testing.B, tf TestFunc){
+	benchmarks := []BM{}
+	cacheName := []string{"lru", "bigCache"}
+
+	for i := 0 ; i < len(cacheName) ; i++ {
+		for cacheSize := 1000 ; cacheSize <= 100000000 ; cacheSize *= 10 {
+			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
+			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
+			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
+		}
 	}
 
 	var cache Cache
@@ -124,19 +100,28 @@ func BenchmarkCacheAddTest(b *testing.B){
 			cache.Add(key(i), value())
 		}
 
-		testName := fmt.Sprintf("%s,cacheSize:%d,inData:%d",bm.name, bm.cacheSize, bm.inDataSize)
-		b.Run(testName, func(b *testing.B) {
-			for i:= 0 ; i < b.N ; i++{
-				cache.Add(key(i+bm.inDataSize), value())
-			}
-		})
+		tf(b, cache, bm)
 	}
 }
 
+var singleAddTestFunc = func(b *testing.B, cache Cache, bm BM){
+	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d",bm.name, bm.cacheSize, bm.inDataSize)
+	b.Run(testName, func(b *testing.B) {
+		for i:= 0 ; i < b.N ; i++{
+			cache.Add(key(i+bm.inDataSize), value())
+		}
+	})
+}
 
 
-
-
+var singleGetTestFunc = func(b *testing.B, cache Cache, bm BM){
+	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d",bm.name, bm.cacheSize, bm.inDataSize)
+	b.Run(testName, func(b *testing.B) {
+		for i:= 0 ; i < b.N ; i++{
+			cache.Get(key(i%bm.inDataSize))
+		}
+	})
+}
 
 func newCache(cacheName string, size int ) (Cache, error){
 	switch cacheName {
@@ -155,7 +140,39 @@ func benchmarkGet(b *testing.B, initCacheSize int, dataSize int){
 	}
 }
 
+/////랜덤 테스트 구현/////
 /*
+
+
+func BenchmarkCacheAddTest(b *testing.B){
+	benchmarks := []BM{}
+	cacheName := []string{"lru", "bigCache"}
+
+	for i := 0 ; i < len(cacheName) ; i++ {
+		for cacheSize := 100 ; cacheSize <= 100000000 ; cacheSize *= 10 {
+			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
+			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
+			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
+		}
+	}
+
+	var cache Cache
+	for _, bm := range benchmarks {
+		cache, _ = newCache(bm.name, bm.cacheSize)
+
+		for i := 0; i < bm.inDataSize; i++ {
+			cache.Add(key(i), value())
+		}
+
+		testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d",bm.name, bm.cacheSize, bm.inDataSize)
+		b.Run(testName, func(b *testing.B) {
+			for i:= 0 ; i < b.N ; i++{
+				cache.Add(key(i+bm.inDataSize), value())
+			}
+		})
+	}
+}
+
 func BenchmarkGoCacheSetParallel(b *testing.B) {
 	c := cache.New(5*time.Minute, 10*time.Minute)
 
