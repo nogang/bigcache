@@ -194,7 +194,7 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
-	cacheName := []string{LRU, BigCache, FreeCache, GoCache}
+	cacheName := []string{LRU, BigCache, FreeCache, GoCache, SyncMap}
 
 	for i := 0 ; i < len(cacheName) ; i++ {
 		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
