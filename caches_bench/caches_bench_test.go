@@ -100,7 +100,7 @@ func (gc *goCache)Add(key, value interface{}) (ok bool) {
 	k, ok := key.(string)
 
 	if ok {
-		gc.cache.Set(k,value,1000)
+		gc.cache.Add(k,value,1000)
 	}
 	return
 }
