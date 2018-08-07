@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"math/rand"
 	"github.com/coocood/freecache"
+	GOCACHE "github.com/patrickmn/go-cache"
 )
 
 const maxEntrySize = 256
@@ -98,6 +99,63 @@ type BM struct{
 	inDataSize 	int
 }
 
+type goCache struct {
+	cache *GOCACHE.Cache
+}
+
+func (gc *goCache)Add(key, value interface{}) (ok bool) {
+	k, ok := key.(string)
+
+	if ok {
+		gc.cache.Set(k,value,1000)
+	}
+	return
+}
+
+func (gc *goCache) Get(key interface{}) (value interface{}, ok bool) {
+	k, ok := key.(string)
+	if ok {
+		return gc.cache.Get(k)
+	}
+	return nil, false
+}
+
+
+func newCache(cacheName string, size int ) (Cache, error){
+	switch cacheName {
+	case LRU:
+		return lru.New(size)
+	case BigCache:
+		return initBigCache(size, 1024), nil
+	case FreeCache:
+		return initFreeCache(size), nil
+	case GoCache:
+		return initGoCache(), nil
+
+	}
+	return nil, nil
+}
+
+func initBigCache(entriesInWindow int, shards int) *bigCache {
+	cache, _ := bigcache.NewBigCache(bigcache.Config{
+		Shards:             shards,
+		LifeWindow:         10 * time.Minute,
+		MaxEntriesInWindow: entriesInWindow,
+		MaxEntrySize:       maxEntrySize,
+		Verbose:            false,
+	})
+
+	return &bigCache{cache}
+}
+
+func initFreeCache(size int) *freeCache{
+	return &freeCache{free:freecache.NewCache(size * maxEntrySize)}
+}
+
+func initGoCache() *goCache{
+	return &goCache{cache:GOCACHE.New(5*time.Minute, 10*time.Minute)}
+}
+
 
 
 type TestFunc func(b *testing.B, cache Cache, bm BM)
@@ -119,14 +177,18 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
-	cacheName := []string{LRU, BigCache, FreeCache}
+	cacheName := []string{LRU, BigCache, FreeCache, GoCache}
 
 	for i := 0 ; i < len(cacheName) ; i++ {
 		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
 		//for cacheSize := 1000 ; cacheSize <= 1000 ; cacheSize *= 10 {
-			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
-			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
-			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
+			if cacheName[i] == GoCache {
+				benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize})
+			} else {
+				benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
+				benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
+				benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
+			}
 		}
 	}
 
@@ -192,35 +254,6 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 			}
 		})
 	})
-}
-
-func newCache(cacheName string, size int ) (Cache, error){
-	switch cacheName {
-	case LRU:
-		return lru.New(size)
-	case BigCache:
-		return initBigCache(size, 1024), nil
-	case FreeCache:
-		return initFreeCache(size), nil
-
-	}
-	return nil, nil
-}
-
-func initBigCache(entriesInWindow int, shards int) *bigCache {
-	cache, _ := bigcache.NewBigCache(bigcache.Config{
-		Shards:             shards,
-		LifeWindow:         10 * time.Minute,
-		MaxEntriesInWindow: entriesInWindow,
-		MaxEntrySize:       maxEntrySize,
-		Verbose:            false,
-	})
-
-	return &bigCache{cache}
-}
-
-func initFreeCache(size int) *freeCache{
-	return &freeCache{free:freecache.NewCache(size * maxEntrySize)}
 }
 
 func key(i int) string {
@@ -571,8 +604,6 @@ func BenchmarkBigCacheTest(b *testing.B) {
 		}
 		fmt.Println("result : %d", ecount)
 	}
-
-
 }
 
 func BenchmarkBigCacheSet10000Level2(b *testing.B) {
