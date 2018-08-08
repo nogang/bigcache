@@ -258,7 +258,7 @@ var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 }
 
 var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
-	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d,goRoutine:%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
+	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d/goRoutine/%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	b.SetParallelism(maxGoroutine)
 	b.ResetTimer()
@@ -277,7 +277,7 @@ func key(i int) string {
 	return fmt.Sprintf("key-%010d", i)
 }
 func value() []byte {
-	return make([]byte, 100)
+	return make([]byte, 256)
 }
 
 func parallelKey(threadID int, counter int) string {
