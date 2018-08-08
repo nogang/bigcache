@@ -222,7 +222,7 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 }
 
 var singleAddTestFunc = func(b *testing.B, cache Cache, bm BM){
-	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d",bm.name, bm.cacheSize, bm.inDataSize)
+	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d",bm.name, bm.cacheSize, bm.inDataSize)
 	b.Run(testName, func(b *testing.B) {
 		for i:= 0 ; i < b.N ; i++{
 			cache.Add(key(i+bm.inDataSize), value())
@@ -232,7 +232,7 @@ var singleAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 
 
 var singleGetTestFunc = func(b *testing.B, cache Cache, bm BM){
-	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d",bm.name, bm.cacheSize, bm.inDataSize)
+	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d",bm.name, bm.cacheSize, bm.inDataSize)
 	b.Run(testName, func(b *testing.B) {
 		for i:= 0 ; i < b.N ; i++{
 			cache.Get(key(i%bm.inDataSize))
@@ -241,7 +241,7 @@ var singleGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 }
 
 var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
-	testName := fmt.Sprintf("%s,cacheSize(count):%d,inData(count):%d,goRoutine:%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
+	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d/goRoutine/%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	b.SetParallelism(maxGoroutine)
 	b.ResetTimer()
