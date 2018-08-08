@@ -201,7 +201,7 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 	cacheName := []string{LRU, BigCache, FreeCache, GoCache, SyncMap}
 
 	for i := 0 ; i < len(cacheName) ; i++ {
-		for cacheSize := 1000 ; cacheSize <= 100000000 ; cacheSize *= 10 {
+		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
 		//for cacheSize := 1000 ; cacheSize <= 1000 ; cacheSize *= 10 {
 			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
 			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
