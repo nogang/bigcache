@@ -11,13 +11,11 @@ import (
 	"github.com/coocood/freecache"
 	GOCACHE "github.com/patrickmn/go-cache"
 	"sync"
+	"os"
+	"flag"
 )
 
 const maxEntrySize = 256
-const mapSize = 100
-const maxGoroutine = 5
-const multiCache = 2
-
 
 const LRU = "LRU"
 const BigCache = "BigCache"
@@ -28,6 +26,14 @@ const SyncMap = "SyncMap"
 ////////////////cache size별 get time////////////
 
 ////////////////cache size별 read time////////////
+var indata = flag.Int("indata",256,"init data size in cache")
+var goroutine = flag.Int("goroutine", 5,"max goroutine count")
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	fmt.Print("testStart")
+	os.Exit(m.Run())
+}
 
 type Cache interface{
 	Add(key, value interface{}) (ok bool)
@@ -241,13 +247,13 @@ var singleGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 }
 
 var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
-	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d/goRoutine/%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
+	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d/goRoutine/%d",bm.name, bm.cacheSize, bm.inDataSize, *goroutine)
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	b.SetParallelism(maxGoroutine)
+	b.SetParallelism(*goroutine)
 	b.ResetTimer()
 	b.Run(testName, func(b *testing.B){
 		b.RunParallel(func(pb *testing.PB) {
-			id := rand.Intn(maxGoroutine * 1000)
+			id := rand.Intn(*goroutine * 1000)
 			counter := 0
 			for pb.Next() {
 				cache.Add(parallelKey(id, counter), value())
@@ -258,9 +264,9 @@ var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 }
 
 var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
-	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d/goRoutine/%d",bm.name, bm.cacheSize, bm.inDataSize, maxGoroutine)
+	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d/goRoutine/%d",bm.name, bm.cacheSize, bm.inDataSize, *goroutine)
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	b.SetParallelism(maxGoroutine)
+	b.SetParallelism(*goroutine)
 	b.ResetTimer()
 	b.Run(testName, func(b *testing.B) {
 		b.RunParallel(func(pb *testing.PB) {
@@ -277,7 +283,7 @@ func key(i int) string {
 	return fmt.Sprintf("key-%010d", i)
 }
 func value() []byte {
-	return make([]byte, 256)
+	return make([]byte, *indata)
 }
 
 func parallelKey(threadID int, counter int) string {
