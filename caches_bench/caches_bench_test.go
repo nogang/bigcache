@@ -36,8 +36,10 @@ var usego = flag.Bool("ug", true,"use gocache")
 var usesync = flag.Bool("us", true,"use syncmap")
 var usearc = flag.Bool("ua", true,"use arc cache")
 
+var val []byte
 func TestMain(m *testing.M) {
 	flag.Parse()
+	val = make([]byte, *indata)
 	fmt.Print("testStart")
 	os.Exit(m.Run())
 }
@@ -327,8 +329,10 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 func key(i int) string {
 	return fmt.Sprintf("key-%010d", i)
 }
+
+
 func value() []byte {
-	return make([]byte, *indata)
+	return val
 }
 
 func parallelKey(threadID int, counter int) string {
