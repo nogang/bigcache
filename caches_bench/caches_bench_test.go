@@ -22,12 +22,19 @@ const BigCache = "BigCache"
 const FreeCache = "FreeCache"
 const GoCache = "GoCache"
 const SyncMap = "SyncMap"
-
+const ARC =	"ARC"
 ////////////////cache size별 get time////////////
 
 ////////////////cache size별 read time////////////
 var indata = flag.Int("indata",256,"init data size in cache")
 var goroutine = flag.Int("goroutine", 5,"max goroutine count")
+
+var uselru = flag.Bool("ul", true,"use lru cache")
+var usebig = flag.Bool("ub", true,"use bigcache")
+var usefree = flag.Bool("uf", true,"use freecache")
+var usego = flag.Bool("ug", true,"use gocache")
+var usesync = flag.Bool("us", true,"use syncmap")
+var usearc = flag.Bool("ua", true,"use arc cache")
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -51,6 +58,19 @@ func (cache *lruCache) Add(key, value interface{}) (ok bool) {
 
 func (cache *lruCache) Get(key interface{}) (value interface{}, ok bool) {
 	return cache.lru.Get(key)
+}
+
+type arcCache struct {
+	arc *lru.ARCCache
+}
+
+func (cache *arcCache) Add(key, value interface{}) (ok bool) {
+	cache.arc.Add(key, value)
+	return true
+}
+
+func (cache *arcCache) Get(key interface{}) (value interface{}, ok bool) {
+	return cache.arc.Get(key)
 }
 
 type bigCache struct {
@@ -148,6 +168,8 @@ func newCache(cacheName string, size int ) (Cache, error){
 		return initGoCache(), nil
 	case SyncMap:
 		return initSyncMap(), nil
+	case ARC:
+		return initARU(size)
 
 	}
 	return nil, nil
@@ -184,6 +206,11 @@ func initSyncMap() *syncMap{
 	return &syncMap{cache:m}
 }
 
+func initARU(size int) (*arcCache, error){
+	arc, err := lru.NewARC(size)
+	return &arcCache{arc}, err
+}
+
 
 type TestFunc func(b *testing.B, cache Cache, bm BM)
 
@@ -204,17 +231,35 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
-	cacheName := []string{LRU, BigCache, FreeCache, GoCache, SyncMap}
+	cacheName := []string{}
+	if *uselru {
+		cacheName = append(cacheName, LRU)
+	}
+	if *usebig {
+		cacheName = append(cacheName, BigCache)
+	}
+	if *usefree {
+		cacheName = append(cacheName, FreeCache)
+	}
+	if *usego {
+		cacheName = append(cacheName, GoCache)
+	}
+	if *usesync {
+		cacheName = append(cacheName, SyncMap)
+	}
+	if *usearc {
+		cacheName = append(cacheName, ARC)
+	}
 
 	for i := 0 ; i < len(cacheName) ; i++ {
 		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
 		//for cacheSize := 1000 ; cacheSize <= 1000 ; cacheSize *= 10 {
-			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
+			//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
 			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
-			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
+			//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
 		}
 	}
-
+ㄴ
 	var cache Cache
 	for _, bm := range benchmarks {
 		cache, _ = newCache(bm.name, bm.cacheSize)
