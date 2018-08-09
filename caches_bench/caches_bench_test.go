@@ -232,12 +232,13 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
 	cacheName := []string{}
-	if *uselru {
-		cacheName = append(cacheName, LRU)
-	}
 	if *usebig {
 		cacheName = append(cacheName, BigCache)
 	}
+	if *uselru {
+		cacheName = append(cacheName, LRU)
+	}
+
 	if *usefree {
 		cacheName = append(cacheName, FreeCache)
 	}
