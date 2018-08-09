@@ -161,7 +161,7 @@ func newCache(cacheName string, size int ) (Cache, error){
 	case LRU:
 		return lru.New(size)
 	case BigCache:
-		return initBigCache(size, 1024), nil
+		return initBigCache(size, 256), nil
 	case FreeCache:
 		return initFreeCache(size), nil
 	case GoCache:
@@ -210,7 +210,6 @@ func initARU(size int) (*arcCache, error){
 	arc, err := lru.NewARC(size)
 	return &arcCache{arc}, err
 }
-
 
 type TestFunc func(b *testing.B, cache Cache, bm BM)
 
