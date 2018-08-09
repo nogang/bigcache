@@ -259,7 +259,7 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 			//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
 		}
 	}
-ㄴ
+
 	var cache Cache
 	for _, bm := range benchmarks {
 		cache, _ = newCache(bm.name, bm.cacheSize)
