@@ -308,6 +308,7 @@ var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 			}
 		})
 	})
+	runtime.GC()
 }
 
 var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
@@ -324,6 +325,7 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 			}
 		})
 	})
+	runtime.GC()
 }
 
 func key(i int) string {
