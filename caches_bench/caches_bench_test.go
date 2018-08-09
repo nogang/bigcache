@@ -261,10 +261,8 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 			//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
 		}
 	}
-
-	var cache Cache
 	for _, bm := range benchmarks {
-		cache, _ = newCache(bm.name, bm.cacheSize)
+		cache, _ := newCache(bm.name, bm.cacheSize)
 
 		for i := 0; i < bm.inDataSize; i++ {
 			cache.Add(key(i), value())
@@ -308,7 +306,6 @@ var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 			}
 		})
 	})
-	runtime.GC()
 }
 
 var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
@@ -325,7 +322,6 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 			}
 		})
 	})
-	runtime.GC()
 }
 
 func key(i int) string {
