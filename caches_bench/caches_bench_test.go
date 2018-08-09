@@ -97,6 +97,10 @@ func (cache *bigCache) Get(key interface{}) (value interface{}, ok bool) {
 	return nil, false
 }
 
+func (cache *bigCache) Reset() {
+	cache.big.Reset()
+}
+
 type freeCache struct{
 	free *freecache.Cache
 }
@@ -269,6 +273,11 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 		}
 
 		tf(b, cache, bm)
+
+		big, ok := cache.(*bigCache)
+		if ok {
+			big.Reset()
+		}
 	}
 }
 
@@ -337,53 +346,3 @@ func parallelKey(threadID int, counter int) string {
 	return fmt.Sprintf("key-%04d-%06d", threadID, counter)
 }
 
-
-/////랜덤 테스트 구현/////
-/*
-func BenchmarkCacheParellalAddTest2(b *testing.B){
-	benchCacheTest2(b, parallelGetTestFunc2)
-}
-
-func benchCacheTest2(b *testing.B, tf TestFunc){
-	benchmarks := []BM{}
-	cacheName := []string{FreeCache}
-
-	for i := 0 ; i < len(cacheName) ; i++ {
-		for cacheSize := 10000000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
-			//for cacheSize := 1000 ; cacheSize <= 1000 ; cacheSize *= 10 {
-			if cacheName[i] == GoCache || cacheName[i] == SyncMap {
-				benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize})
-			} else {
-				benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
-				//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
-				//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
-			}
-		}
-	}
-
-	var cache Cache
-	for _, bm := range benchmarks {
-		cache, _ = newCache(bm.name, bm.cacheSize)
-
-		for i := 0; i < bm.inDataSize; i++ {
-			cache.Add(key(i), value())
-		}
-
-		tf(b, cache, bm)
-	}
-}
-var parallelGetTestFunc2 = func(b *testing.B, cache Cache, bm BM){
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	b.SetParallelism(maxGoroutine)
-	b.ResetTimer()
-
-		b.RunParallel(func(pb *testing.PB) {
-			counter := 0
-			for pb.Next() {
-				cache.Get(key(counter % bm.inDataSize))
-				counter++
-			}
-		})
-
-}
-*/
