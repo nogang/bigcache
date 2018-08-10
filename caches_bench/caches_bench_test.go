@@ -234,6 +234,45 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 	benchCacheTest(b, parallelAddTestFunc)
 }
 
+func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
+	benchmarks := []BM{}
+	cacheName := []string{}
+	cacheName = append(cacheName, BigCache)
+
+	for i := 0 ; i < len(cacheName) ; i++ {
+		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
+			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
+		}
+	}
+	for _, bm := range benchmarks {
+		cache, _ := newCache(bm.name, bm.cacheSize)
+
+		for i := 0; i < bm.inDataSize; i++ {
+			cache.Add(key(i), value())
+		}
+
+		runtime.GOMAXPROCS(runtime.NumCPU())
+		b.SetParallelism(*goroutine)
+		b.ResetTimer()
+
+		b.RunParallel(func(pb *testing.PB) {
+			id := rand.Intn(*goroutine * 1000)
+			counter := 0
+			for pb.Next() {
+				cache.Add(parallelKey(id, counter), value())
+				counter++
+			}
+		})
+
+		big, ok := cache.(*bigCache)
+		if ok {
+			big.Reset()
+		}
+	}
+}
+
+
+
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
 	cacheName := []string{}
