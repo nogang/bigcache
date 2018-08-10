@@ -188,8 +188,6 @@ type BM struct{
 }
 
 func initBigCache(entriesInWindow int, shards int) *bigCache {
-	cache, _ := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Second))
-	/*
 	cache, _ := bigcache.NewBigCache(bigcache.Config{
 		Shards:             shards,
 		LifeWindow:         10 * time.Minute,
@@ -197,7 +195,7 @@ func initBigCache(entriesInWindow int, shards int) *bigCache {
 		MaxEntrySize:       maxEntrySize,
 		Verbose:            false,
 	})
-*/
+
 	return &bigCache{cache}
 }
 
@@ -236,10 +234,11 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 	benchCacheTest(b, parallelAddTestFunc)
 }
 
+var wait sync.WaitGroup
 func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
 	benchmarks := []BM{}
 
-	cacheSize := 1000000
+	cacheSize := 100000
 	benchmarks = append(benchmarks,BM{name:BigCache,cacheSize:cacheSize,inDataSize:cacheSize/100})
 
 	for _, bm := range benchmarks {
@@ -253,21 +252,32 @@ func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
 		b.SetParallelism(*goroutine)
 		b.ResetTimer()
 
-		b.RunParallel(func(pb *testing.PB) {
-			id := rand.Intn(*goroutine * 1000)
-			counter := 0
-			for pb.Next() {
-				cache.Add(parallelKey(id, counter), value())
-				counter++
-			}
-		})
+		wait.Add(5)
+		go allocateTestFunc(cache)
+		go allocateTestFunc(cache)
+		go allocateTestFunc(cache)
+		go allocateTestFunc(cache)
+		go allocateTestFunc(cache)
 
 		big, ok := cache.(*bigCache)
 		if ok {
 			big.Reset()
 		}
+		wait.Wait()
 	}
 }
+
+func allocateTestFunc(cache Cache) {
+	defer wait.Done()
+	for i := 0 ; i < 10000000 ; i++{
+		id := rand.Intn(*goroutine * 1000)
+		counter := 0
+
+		cache.Add(parallelKey(id, counter), value())
+		counter++
+	}
+}
+
 
 
 
