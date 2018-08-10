@@ -230,57 +230,13 @@ func BenchmarkCacheParellalGetTest(b *testing.B){
 	benchCacheTest(b, parallelGetTestFunc)
 }
 
-func BenchmarkCacheParellalAddTest(b *testing.B){
-	benchCacheTest(b, parallelAddTestFunc)
-}
-
-var wait sync.WaitGroup
-func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
-	benchmarks := []BM{}
-
-	cacheSize := 100000
-	benchmarks = append(benchmarks,BM{name:BigCache,cacheSize:cacheSize,inDataSize:cacheSize/100})
-
-	for _, bm := range benchmarks {
-		cache, _ := newCache(bm.name, bm.cacheSize)
-
-		for i := 0; i < bm.inDataSize; i++ {
-			cache.Add(key(i), value())
-		}
-
-		runtime.GOMAXPROCS(runtime.NumCPU())
-		b.SetParallelism(*goroutine)
-		b.ResetTimer()
-
-		wait.Add(5)
-		for i := 0 ; i<5;i++{
-			go allocateTestFunc(cache)
-		}
-
-		wait.Wait()
-	}
-}
-
-func allocateTestFunc(cache Cache) {
-	defer wait.Done()
-	for i := 0 ; i < 10000000 ; i++{
-		id := rand.Intn(*goroutine * 1000)
-		counter := 0
-
-		cache.Add(parallelKey(id, counter), value())
-		counter++
-	}
-}
-
-
-
-
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
 	cacheName := []string{}
 	if *usebig {
 		cacheName = append(cacheName, BigCache)
 	}
+
 	if *uselru {
 		cacheName = append(cacheName, LRU)
 	}
@@ -300,10 +256,7 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 
 	for i := 0 ; i < len(cacheName) ; i++ {
 		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
-		//for cacheSize := 1000 ; cacheSize <= 1000 ; cacheSize *= 10 {
-			//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/10})
 			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
-			//benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/1000})
 		}
 	}
 	for _, bm := range benchmarks {
@@ -314,11 +267,6 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 		}
 
 		tf(b, cache, bm)
-
-		big, ok := cache.(*bigCache)
-		if ok {
-			big.Reset()
-		}
 	}
 }
 
@@ -377,7 +325,6 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 func key(i int) string {
 	return fmt.Sprintf("key-%010d", i)
 }
-
 
 func value() []byte {
 	return val
