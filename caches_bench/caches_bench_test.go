@@ -222,12 +222,17 @@ type TestFunc func(b *testing.B, cache Cache, bm BM)
 func BenchmarkCacheSingleGetTest(b *testing.B){
 	benchCacheTest(b, singleGetTestFunc)
 }
+
 func BenchmarkCacheSingleAddTest(b *testing.B){
 	benchCacheTest(b, singleAddTestFunc)
 }
 
 func BenchmarkCacheParellalGetTest(b *testing.B){
 	benchCacheTest(b, parallelGetTestFunc)
+}
+
+func BenchmarkCacheParellalAddTest(b *testing.B){
+	benchCacheTest(b, parallelAddTestFunc)
 }
 
 func benchCacheTest(b *testing.B, tf TestFunc){
