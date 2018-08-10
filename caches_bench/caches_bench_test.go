@@ -236,14 +236,10 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 
 func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
 	benchmarks := []BM{}
-	cacheName := []string{}
-	cacheName = append(cacheName, BigCache)
 
-	for i := 0 ; i < len(cacheName) ; i++ {
-		for cacheSize := 1000 ; cacheSize <= 10000000 ; cacheSize *= 10 {
-			benchmarks = append(benchmarks,BM{name:cacheName[i],cacheSize:cacheSize,inDataSize:cacheSize/100})
-		}
-	}
+	cacheSize := 100000
+	benchmarks = append(benchmarks,BM{name:BigCache,cacheSize:cacheSize,inDataSize:cacheSize/100})
+
 	for _, bm := range benchmarks {
 		cache, _ := newCache(bm.name, bm.cacheSize)
 
