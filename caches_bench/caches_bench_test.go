@@ -254,7 +254,7 @@ func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
 
 		wait.Add(5)
 		for i := 0 ; i<5;i++{
-			allocateTestFunc(cache)
+			go allocateTestFunc(cache)
 		}
 
 		big, ok := cache.(*bigCache)
