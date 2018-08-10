@@ -237,7 +237,7 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
 	benchmarks := []BM{}
 
-	cacheSize := 100000
+	cacheSize := 1000000
 	benchmarks = append(benchmarks,BM{name:BigCache,cacheSize:cacheSize,inDataSize:cacheSize/100})
 
 	for _, bm := range benchmarks {
