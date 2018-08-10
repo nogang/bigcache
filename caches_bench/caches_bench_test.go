@@ -188,6 +188,8 @@ type BM struct{
 }
 
 func initBigCache(entriesInWindow int, shards int) *bigCache {
+	cache, _ := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Second))
+	/*
 	cache, _ := bigcache.NewBigCache(bigcache.Config{
 		Shards:             shards,
 		LifeWindow:         10 * time.Minute,
@@ -195,7 +197,7 @@ func initBigCache(entriesInWindow int, shards int) *bigCache {
 		MaxEntrySize:       maxEntrySize,
 		Verbose:            false,
 	})
-
+*/
 	return &bigCache{cache}
 }
 
