@@ -257,17 +257,13 @@ func BenchmarkCacheParellalAddMemoryTest(b *testing.B){
 			go allocateTestFunc(cache)
 		}
 
-		big, ok := cache.(*bigCache)
-		if ok {
-			big.Reset()
-		}
 		wait.Wait()
 	}
 }
 
 func allocateTestFunc(cache Cache) {
 	defer wait.Done()
-	for i := 0 ; i < 1000000 ; i++{
+	for i := 0 ; i < 10000000 ; i++{
 		id := rand.Intn(*goroutine * 1000)
 		counter := 0
 
