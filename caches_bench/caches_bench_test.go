@@ -220,22 +220,27 @@ func initARU(size int) (*arcCache, error){
 type TestFunc func(b *testing.B, cache Cache, bm BM)
 
 func BenchmarkCacheSingleGetTest(b *testing.B){
+	b.ReportAllocs()
 	benchCacheTest(b, singleGetTestFunc)
 }
 
 func BenchmarkCacheSingleAddTest(b *testing.B){
+	b.ReportAllocs()
 	benchCacheTest(b, singleAddTestFunc)
 }
 
 func BenchmarkCacheParellalGetTest(b *testing.B){
+	b.ReportAllocs()
 	benchCacheTest(b, parallelGetTestFunc)
 }
 
 func BenchmarkCacheParellalAddTest(b *testing.B){
+	b.ReportAllocs()
 	benchCacheTest(b, parallelAddTestFunc)
 }
 
 func BenchmarkCacheParellalAddGetMixTest(b *testing.B){
+	b.ReportAllocs()
 	benchCacheTest(b, parallelGetAddMixTestFunc)
 }
 
