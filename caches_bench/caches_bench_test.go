@@ -220,27 +220,22 @@ func initARU(size int) (*arcCache, error){
 type TestFunc func(b *testing.B, cache Cache, bm BM)
 
 func BenchmarkCacheSingleGetTest(b *testing.B){
-	b.ReportAllocs()
 	benchCacheTest(b, singleGetTestFunc)
 }
 
 func BenchmarkCacheSingleAddTest(b *testing.B){
-	b.ReportAllocs()
 	benchCacheTest(b, singleAddTestFunc)
 }
 
 func BenchmarkCacheParellalGetTest(b *testing.B){
-	b.ReportAllocs()
 	benchCacheTest(b, parallelGetTestFunc)
 }
 
 func BenchmarkCacheParellalAddTest(b *testing.B){
-	b.ReportAllocs()
 	benchCacheTest(b, parallelAddTestFunc)
 }
 
 func BenchmarkCacheParellalAddGetMixTest(b *testing.B){
-	b.ReportAllocs()
 	benchCacheTest(b, parallelGetAddMixTestFunc)
 }
 
@@ -287,6 +282,7 @@ func benchCacheTest(b *testing.B, tf TestFunc){
 var singleAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d",bm.name, bm.cacheSize, bm.inDataSize)
 	b.Run(testName, func(b *testing.B) {
+		b.ReportAllocs()
 		for i:= 0 ; i < b.N ; i++{
 			cache.Add(key(i+bm.inDataSize), value())
 		}
@@ -297,6 +293,7 @@ var singleAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 var singleGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d",bm.name, bm.cacheSize, bm.inDataSize)
 	b.Run(testName, func(b *testing.B) {
+		b.ReportAllocs()
 		for i:= 0 ; i < b.N ; i++{
 			cache.Get(key(i%bm.inDataSize))
 		}
@@ -309,6 +306,7 @@ var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 	b.SetParallelism(*goroutine)
 	b.ResetTimer()
 	b.Run(testName, func(b *testing.B){
+		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
 			id := rand.Intn(*goroutine * 1000)
 			counter := 0
@@ -326,6 +324,7 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 	b.SetParallelism(*goroutine)
 	b.ResetTimer()
 	b.Run(testName, func(b *testing.B) {
+		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
 			counter := 0
 			for pb.Next() {
@@ -342,6 +341,7 @@ var parallelGetAddMixTestFunc = func(b *testing.B, cache Cache, bm BM){
 	b.SetParallelism(*goroutine)
 	b.ResetTimer()
 	b.Run(testName, func(b *testing.B) {
+		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
 			id := rand.Intn(*goroutine * 1000)
 			counter := 0
