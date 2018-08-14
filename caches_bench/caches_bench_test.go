@@ -15,7 +15,7 @@ import (
 	"flag"
 )
 
-const maxEntrySize = 256
+const maxEntrySize = 8
 
 const LRU = "LRU"
 const BigCache = "BigCache"
