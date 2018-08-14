@@ -235,6 +235,10 @@ func BenchmarkCacheParellalAddTest(b *testing.B){
 	benchCacheTest(b, parallelAddTestFunc)
 }
 
+func BenchmarkCacheParellalAddGetMixTest(b *testing.B){
+	benchCacheTest(b, parallelGetAddMixTestFunc)
+}
+
 func benchCacheTest(b *testing.B, tf TestFunc){
 	benchmarks := []BM{}
 	cacheName := []string{}
@@ -321,6 +325,27 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 			counter := 0
 			for pb.Next() {
 				cache.Get(key(counter % bm.inDataSize))
+				counter++
+			}
+		})
+	})
+}
+
+var parallelGetAddMixTestFunc = func(b *testing.B, cache Cache, bm BM){
+	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d/goRoutine/%d",bm.name, bm.cacheSize, bm.inDataSize, *goroutine)
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	b.SetParallelism(*goroutine)
+	b.ResetTimer()
+	b.Run(testName, func(b *testing.B) {
+		b.RunParallel(func(pb *testing.PB) {
+			id := rand.Intn(*goroutine * 1000)
+			counter := 0
+			for pb.Next() {
+				if counter % 8 != 0 {
+					cache.Get(key(counter % bm.inDataSize))
+				} else {
+					cache.Add(parallelKey(id, counter), value())
+				}
 				counter++
 			}
 		})
