@@ -283,6 +283,8 @@ var singleAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d",bm.name, bm.cacheSize, bm.inDataSize)
 	b.Run(testName, func(b *testing.B) {
 		b.ReportAllocs()
+		b.N = 100000
+
 		for i:= 0 ; i < b.N ; i++{
 			cache.Add(key(i+bm.inDataSize), value())
 		}
@@ -294,6 +296,8 @@ var singleGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 	testName := fmt.Sprintf("%s/cacheSize(count)/%d/inData(count)/%d",bm.name, bm.cacheSize, bm.inDataSize)
 	b.Run(testName, func(b *testing.B) {
 		b.ReportAllocs()
+		b.N = 100000
+
 		for i:= 0 ; i < b.N ; i++{
 			cache.Get(key(i%bm.inDataSize))
 		}
@@ -310,6 +314,8 @@ var parallelAddTestFunc = func(b *testing.B, cache Cache, bm BM){
 		b.RunParallel(func(pb *testing.PB) {
 			id := rand.Intn(*goroutine * 1000)
 			counter := 0
+			b.N = 100000
+
 			for pb.Next() {
 				cache.Add(parallelKey(id, counter), value())
 				counter++
@@ -327,6 +333,8 @@ var parallelGetTestFunc = func(b *testing.B, cache Cache, bm BM){
 		b.ReportAllocs()
 		b.RunParallel(func(pb *testing.PB) {
 			counter := 0
+			b.N = 100000
+
 			for pb.Next() {
 				cache.Get(key(counter % bm.inDataSize))
 				counter++
@@ -345,6 +353,7 @@ var parallelGetAddMixTestFunc = func(b *testing.B, cache Cache, bm BM){
 		b.RunParallel(func(pb *testing.PB) {
 			id := rand.Intn(*goroutine * 1000)
 			counter := 0
+			b.N = 100000
 			for pb.Next() {
 				if counter % 8 != 0 {
 					cache.Get(key(counter % bm.inDataSize))
