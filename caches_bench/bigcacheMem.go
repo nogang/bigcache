@@ -6,15 +6,43 @@ import (
 	"github.com/allegro/bigcache"
 	"runtime"
 	"sync"
+	"github.com/hashicorp/golang-lru"
+	"math/rand"
 )
 var maxGoroutine int
 func main(){
-	maxGoroutine = 5000
+	maxGoroutine = 1
 	fmt.Println("test world")
-	memTest()
+	//memBigCacheTest()
+	memALUTest()
+	printMem()
 }
 var wait sync.WaitGroup
-func memTest(){
+
+
+func memALUTest(){
+	printMem()
+	cache, _ := lru.New(80960)
+	rand.Seed(time.Now().UTC().UnixNano())
+	for {
+		for i := 0; i < 1000000; i++ {
+			value := make([]byte, 1024)
+			cache.Add(fmt.Sprintf("%d", rand.Int()), value)
+		}
+		/*
+	for i:= 0; i < 1000000 ; i++ {
+		_,ok := cache.Get(fmt.Sprintf("%d",i))
+		if !ok {
+			fmt.Println("not")
+		}
+
+	}
+*/
+		printMem()
+	}
+}
+
+func memBigCacheTest(){
 
 	cache, _ := bigcache.NewBigCache(bigcache.Config{
 		Shards:             256,
@@ -26,18 +54,25 @@ func memTest(){
 	printMem()
 
 	wait.Add(maxGoroutine)
+	start := time.Now()
 	for t := 0 ; t < maxGoroutine ; t++ {
-		go testFunc(cache, t)
+		go testBigCacheFunc(cache, t)
 	}
+	fmt.Printf("gorou : %d \n", runtime.NumGoroutine())
+	buf := make([]byte, 1<<16)
+	runtime.Stack(buf, true)
+	fmt.Printf("%s", buf)
 
 	wait.Wait()
+	elapsedTime := time.Since(start)
+	fmt.Printf("%s",elapsedTime/10000000)
 	printMem()
 }
 
-func testFunc(bc *bigcache.BigCache,start int){
+func testBigCacheFunc(bc *bigcache.BigCache,start int){
 	defer wait.Done()
 	value := make([]byte, 256)
-	for i:= 0; i < 10000000/maxGoroutine ; i++ {
+	for i:= 0; i < 1000000/maxGoroutine ; i++ {
 		e := bc.Set(fmt.Sprintf("%d",start + i),value)
 		if e != nil {
 			fmt.Errorf("err %s", e)
@@ -56,4 +91,5 @@ func printMem(){
 	fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
 	fmt.Printf("\tSys = %v MiB", bToMb(m.Sys))
 	fmt.Printf("\tNumGC = %v\n", m.NumGC)
+	fmt.Printf("\tfree = %v\n", bToMb(m.Frees))
 }
