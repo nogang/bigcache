@@ -26,7 +26,7 @@ func memALUTest(){
 	rand.Seed(time.Now().UTC().UnixNano())
 	for {
 		for i := 0; i < 1000000; i++ {
-			value := make([]byte, 1024)
+			value := make([]byte, 1024*8)
 			cache.Add(fmt.Sprintf("%d", rand.Int()), value)
 		}
 		/*
