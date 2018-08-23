@@ -25,6 +25,10 @@ var data10 [100000]byte
 
 var benchmarks []BM_DATASIZE
 
+func newData() [100000]byte{
+	var data [100000]byte
+	return data
+}
 func init() {
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
@@ -50,7 +54,7 @@ func BenchmarkAddSizeTestUsing1(b *testing.B){
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), 1)
+		cache.Add(key(i), newData())
 	}
 }
 func BenchmarkAddSizeTestUsing2(b *testing.B){
@@ -98,7 +102,7 @@ func BenchmarkAddSizeTestUsingBM(b *testing.B){
 		b.Run(testName, func(b *testing.B) {
 			//b.ReportAllocs()
 			for i:= 0 ; i < b.N ; i++{
-				cache.Add(key(i), data)
+				cache.Add(key(i), newData())
 			}
 		})
 	}
