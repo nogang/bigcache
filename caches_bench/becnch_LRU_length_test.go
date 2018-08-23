@@ -11,10 +11,10 @@ type BM_DATASIZE struct{
 	data 	interface{}
 }
 
-var data [100]byte
-var data1 [100]byte
-var data2 [100]byte
-var data3 [100]byte
+var data [100000]byte
+var data1 [100000]byte
+var data2 [100000]byte
+var data3 [100000]byte
 var benchmarks []BM_DATASIZE
 
 func init() {
@@ -35,20 +35,14 @@ func init() {
 }
 
 func BenchmarkAddSizeTestUsingB(b *testing.B){
-
-	for _, bm := range benchmarks {
-		cache, e := lru.New(10000000)
-		if e != nil {
-			fmt.Printf("cache generate error : %s\n",e)
-		}
-		//b.ResetTimer()
-		testName := fmt.Sprintf("Single Add Test : dataSize %d",bm.datasize)
-		b.Run(testName, func(b *testing.B) {
-			//b.ReportAllocs()
-			for i:= 0 ; i < b.N ; i++{
-				cache.Add(key(i), 1)
-			}
-		})
+	cache, e := lru.New(10000000)
+	if e != nil {
+		fmt.Printf("cache generate error : %s\n",e)
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i:= 0 ; i < b.N ; i++{
+		cache.Add(key(i), 1)
 	}
 }
 
