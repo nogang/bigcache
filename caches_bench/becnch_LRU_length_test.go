@@ -100,12 +100,14 @@ func BenchmarkAddSizeTestUsingBM(b *testing.B){
 		if e != nil {
 			fmt.Printf("cache generate error : %s\n",e)
 		}
-		//b.ResetTimer()
+		
 		testName := fmt.Sprintf("Single Add Test : dataSize %d",bm.datasize)
 		b.Run(testName, func(b *testing.B) {
 			//b.ReportAllocs()
+			data := newData()
+			b.ResetTimer()
 			for i:= 0 ; i < b.N ; i++{
-				cache.Add(key(i), newData())
+				cache.Add(key(i), data)
 			}
 		})
 	}
