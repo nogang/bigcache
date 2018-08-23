@@ -17,11 +17,11 @@ func BenchmarkAddSizeTest(b *testing.B){
 
 	if true {
 		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100, data: make([]byte, 100)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000, data: make([]byte, 1000)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10000, data: make([]byte, 10000)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100000, data: make([]byte, 100000)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000000, data: make([]byte, 1000000)})
+		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
 	} else {
 		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: [10]byte{}})
 		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100, data: [100]byte{}})
