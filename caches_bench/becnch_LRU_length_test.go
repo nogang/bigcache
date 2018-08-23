@@ -12,7 +12,7 @@ type BM_DATASIZE struct{
 }
 
 var data [100000]byte
-func BenchmarkAddSizeTest(b *testing.B){
+func BenchmarkAddSizeTestUsingBM(b *testing.B){
 	benchmarks := []BM_DATASIZE{}
 
 	if true {
@@ -31,9 +31,7 @@ func BenchmarkAddSizeTest(b *testing.B){
 		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000000, data: [1000000]byte{}})
 	}
 
-
 	for _, bm := range benchmarks {
-
 		cache, e := lru.New(10000000)
 		if e != nil {
 			fmt.Printf("cache generate error : %s\n",e)
@@ -49,3 +47,40 @@ func BenchmarkAddSizeTest(b *testing.B){
 	}
 }
 
+func BenchmarkAddSizeTestWithout1(b *testing.B){
+		cache, e := lru.New(10000000)
+		if e != nil {
+			fmt.Printf("cache generate error : %s\n",e)
+		}
+		b.ResetTimer()
+		b.ReportAllocs()
+		for i:= 0 ; i < b.N ; i++{
+			cache.Add(key(i), data)
+		}
+}
+
+
+func BenchmarkAddSizeTestWithout2(b *testing.B){
+	cache, e := lru.New(10000000)
+	if e != nil {
+		fmt.Printf("cache generate error : %s\n",e)
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i:= 0 ; i < b.N ; i++{
+		cache.Add(key(i), data)
+	}
+}
+
+
+func BenchmarkAddSizeTestWithout3(b *testing.B){
+	cache, e := lru.New(10000000)
+	if e != nil {
+		fmt.Printf("cache generate error : %s\n",e)
+	}
+	b.ResetTimer()
+	b.ReportAllocs()
+	for i:= 0 ; i < b.N ; i++{
+		cache.Add(key(i), data)
+	}
+}
