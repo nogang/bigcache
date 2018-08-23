@@ -44,7 +44,7 @@ func BenchmarkAddSizeTestUsingBM(b *testing.B){
 		//b.ResetTimer()
 		testName := fmt.Sprintf("Single Add Test : dataSize %d",bm.datasize)
 		b.Run(testName, func(b *testing.B) {
-			b.ReportAllocs()
+			//b.ReportAllocs()
 			for i:= 0 ; i < b.N ; i++{
 				cache.Add(key(i), data)
 			}
