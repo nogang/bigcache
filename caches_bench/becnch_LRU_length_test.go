@@ -11,10 +11,10 @@ type BM_DATASIZE struct{
 	data 	interface{}
 }
 
-var data [10000]byte
-var data1 [10000]byte
-var data2 [10000]byte
-var data3 [10000]byte
+var data [100]byte
+var data1 [100]byte
+var data2 [100]byte
+var data3 [100]byte
 var benchmarks []BM_DATASIZE
 
 func init() {
