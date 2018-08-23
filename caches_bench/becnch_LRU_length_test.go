@@ -4,6 +4,9 @@ import (
 	"testing"
 	"github.com/hashicorp/golang-lru"
 	"fmt"
+	"os"
+	"log"
+	"runtime/pprof"
 )
 
 type BM_DATASIZE struct{
@@ -25,14 +28,8 @@ var data10 [100000]byte
 
 var benchmarks []BM_DATASIZE
 
-func newData() [100000]byte{
-	var data [100000]byte
-	for i, _ := range data {
-		data[i] = 1
-	}
-	return data
-}
 func init() {
+	/*
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
@@ -40,7 +37,7 @@ func init() {
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
 
-
+*/
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: [10]byte{}})
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100, data: [100]byte{}})
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000, data: [1000]byte{}})
@@ -49,104 +46,30 @@ func init() {
 	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000000, data: [1000000]byte{}})
 }
 
-func BenchmarkAddSizeTestUsing1(b *testing.B){
-	cache, e := lru.New(10000000)
-	if e != nil {
-		fmt.Printf("cache generate error : %s\n",e)
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), newData())
-	}
-}
-func BenchmarkAddSizeTestUsing2(b *testing.B){
-	cache, e := lru.New(10000000)
-	if e != nil {
-		fmt.Printf("cache generate error : %s\n",e)
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), 1)
-	}
-}
-func BenchmarkAddSizeTestUsing3(b *testing.B){
-	cache, e := lru.New(10000000)
-	if e != nil {
-		fmt.Printf("cache generate error : %s\n",e)
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), 1)
-	}
-}
-func BenchmarkAddSizeTestUsing4(b *testing.B){
-	cache, e := lru.New(10000000)
-	if e != nil {
-		fmt.Printf("cache generate error : %s\n",e)
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), 1)
-	}
-}
 func BenchmarkAddSizeTestUsingBM(b *testing.B){
 
 	for _, bm := range benchmarks {
-		cache, e := lru.New(10000000)
-		if e != nil {
-			fmt.Printf("cache generate error : %s\n",e)
-		}
-		
+
 		testName := fmt.Sprintf("Single Add Test : dataSize %d",bm.datasize)
 		b.Run(testName, func(b *testing.B) {
+			cache, e := lru.New(10000000)
+			if e != nil {
+				fmt.Printf("cache generate error : %s\n",e)
+			}
 			//b.ReportAllocs()
-			data := newData()
+
+			f, err := os.Create("./" + testName + "_2nd")
+			if err != nil {
+				log.Fatal("could not create CPU profile: ", err)
+			}
+			if err := pprof.StartCPUProfile(f); err != nil {
+				log.Fatal("could not start CPU profile: ", err)
+			}
+			defer pprof.StopCPUProfile()
 			b.ResetTimer()
 			for i:= 0 ; i < b.N ; i++{
 				cache.Add(key(i), data)
 			}
 		})
-	}
-}
-
-func BenchmarkAddSizeTestWithout1(b *testing.B){
-		cache, e := lru.New(10000000)
-		if e != nil {
-			fmt.Printf("cache generate error : %s\n",e)
-		}
-		b.ResetTimer()
-		b.ReportAllocs()
-		for i:= 0 ; i < b.N ; i++{
-			cache.Add(key(i), data8)
-		}
-}
-
-
-func BenchmarkAddSizeTestWithout2(b *testing.B){
-	cache, e := lru.New(10000000)
-	if e != nil {
-		fmt.Printf("cache generate error : %s\n",e)
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), data7)
-	}
-}
-
-
-func BenchmarkAddSizeTestWithout3(b *testing.B){
-	cache, e := lru.New(10000000)
-	if e != nil {
-		fmt.Printf("cache generate error : %s\n",e)
-	}
-	b.ResetTimer()
-	b.ReportAllocs()
-	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), data1)
 	}
 }
