@@ -27,6 +27,9 @@ var benchmarks []BM_DATASIZE
 
 func newData() [100000]byte{
 	var data [100000]byte
+	for i, _ := range data {
+		data[i] = 1
+	}
 	return data
 }
 func init() {
