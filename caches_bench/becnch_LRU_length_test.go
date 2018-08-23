@@ -15,6 +15,14 @@ var data [100000]byte
 var data1 [100000]byte
 var data2 [100000]byte
 var data3 [100000]byte
+var data4 [100000]byte
+var data5 [100000]byte
+var data6 [100000]byte
+var data7 [100000]byte
+var data8 [100000]byte
+var data9 [100000]byte
+var data10 [100000]byte
+
 var benchmarks []BM_DATASIZE
 
 func init() {
@@ -104,7 +112,7 @@ func BenchmarkAddSizeTestWithout1(b *testing.B){
 		b.ResetTimer()
 		b.ReportAllocs()
 		for i:= 0 ; i < b.N ; i++{
-			cache.Add(key(i), data1)
+			cache.Add(key(i), data8)
 		}
 }
 
@@ -117,7 +125,7 @@ func BenchmarkAddSizeTestWithout2(b *testing.B){
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), data2)
+		cache.Add(key(i), data7)
 	}
 }
 
@@ -130,6 +138,6 @@ func BenchmarkAddSizeTestWithout3(b *testing.B){
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), data3)
+		cache.Add(key(i), data1)
 	}
 }
