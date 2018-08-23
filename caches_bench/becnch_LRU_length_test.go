@@ -11,10 +11,10 @@ type BM_DATASIZE struct{
 	data 	interface{}
 }
 
-var data [100000]byte
-var data1 [100000]byte
-var data2 [100000]byte
-var data3 [100000]byte
+var data [10000]byte
+var data1 [10000]byte
+var data2 [10000]byte
+var data3 [10000]byte
 func BenchmarkAddSizeTestUsingBM(b *testing.B){
 	benchmarks := []BM_DATASIZE{}
 
