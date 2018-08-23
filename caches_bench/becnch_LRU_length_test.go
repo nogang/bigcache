@@ -15,24 +15,26 @@ var data [10000]byte
 var data1 [10000]byte
 var data2 [10000]byte
 var data3 [10000]byte
-func BenchmarkAddSizeTestUsingBM(b *testing.B){
-	benchmarks := []BM_DATASIZE{}
+var benchmarks []BM_DATASIZE
 
-	if true {
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
-	} else {
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: [10]byte{}})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100, data: [100]byte{}})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000, data: [1000]byte{}})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10000, data: [10000]byte{}})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100000, data: [100000]byte{}})
-		benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000000, data: [1000000]byte{}})
-	}
+func init() {
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: make([]byte, 10)})
+
+
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10, data: [10]byte{}})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100, data: [100]byte{}})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000, data: [1000]byte{}})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 10000, data: [10000]byte{}})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 100000, data: [100000]byte{}})
+	benchmarks = append(benchmarks, BM_DATASIZE{datasize: 1000000, data: [1000000]byte{}})
+}
+
+func BenchmarkAddSizeTestUsingBM(b *testing.B){
 
 	for _, bm := range benchmarks {
 		cache, e := lru.New(10000000)
