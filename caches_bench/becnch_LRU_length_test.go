@@ -12,6 +12,9 @@ type BM_DATASIZE struct{
 }
 
 var data [100000]byte
+var data1 [100000]byte
+var data2 [100000]byte
+var data3 [100000]byte
 func BenchmarkAddSizeTestUsingBM(b *testing.B){
 	benchmarks := []BM_DATASIZE{}
 
@@ -55,7 +58,7 @@ func BenchmarkAddSizeTestWithout1(b *testing.B){
 		b.ResetTimer()
 		b.ReportAllocs()
 		for i:= 0 ; i < b.N ; i++{
-			cache.Add(key(i), data)
+			cache.Add(key(i), data1)
 		}
 }
 
@@ -68,7 +71,7 @@ func BenchmarkAddSizeTestWithout2(b *testing.B){
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), data)
+		cache.Add(key(i), data2)
 	}
 }
 
@@ -81,6 +84,6 @@ func BenchmarkAddSizeTestWithout3(b *testing.B){
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i:= 0 ; i < b.N ; i++{
-		cache.Add(key(i), data)
+		cache.Add(key(i), data3)
 	}
 }
