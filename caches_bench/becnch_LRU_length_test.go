@@ -14,17 +14,8 @@ type BM_DATASIZE struct{
 	data 	interface{}
 }
 
-var data [100000]byte
-var data1 [100000]byte
-var data2 [100000]byte
-var data3 [100000]byte
-var data4 [100000]byte
-var data5 [100000]byte
-var data6 [100000]byte
-var data7 [100000]byte
-var data8 [100000]byte
-var data9 [100000]byte
-var data10 [100000]byte
+var data = [100000]byte{99999 : 1}
+
 
 var benchmarks []BM_DATASIZE
 
